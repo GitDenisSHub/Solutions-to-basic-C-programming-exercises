@@ -108,35 +108,37 @@ public:
 
     //========================================
     //Поиск элемента - создан для метода удаления(но можно использовать и так)
-    bool is_exist(int data, Node* currentNode){      
+    Node* is_exist(int data, Node* currentNode){      
         //Алгоритм поиска узла
         if(currentNode->data == data){
             cout<<"We found this element!"<<endl;
-            return true;
+            return currentNode;
         } 
-        else if(currentNode->left == nullptr && currentNode->right == nullptr) return false; 
+        else if(currentNode->left == nullptr && currentNode->right == nullptr) return nullptr; 
 
         if(currentNode->left != nullptr){
-            if(!(is_exist(data, currentNode->left))){
+            if(is_exist(data, currentNode->left) == nullptr){
                 if(currentNode->right != nullptr){
-                    if(!(is_exist(data, currentNode->right))){
+                    if(is_exist(data, currentNode->right) == nullptr){
                     //cout<<"The element doesn't exist here!"<<endl;
-                    return false;
+                    return nullptr;
                     }
-                    return true;
+                    //Вот тут нужно возаращать то, что возвращает наследник правого
+                    return currentNode->right;
                 }
                 cout<<"The element isn't exist here!"<<endl;
-                return false;
+                return nullptr;
                 
             }
         }
         else{
-            if(!(is_exist(data, currentNode->right))){
-                return false;
+            if(is_exist(data, currentNode->right) == nullptr){
+                return nullptr;
             }
+            return currentNode->right;
         }
         
-        return true;
+        return currentNode->left;
     }
     //========================================
 
@@ -292,8 +294,8 @@ int main() {
     }
     cout<<endl;
 
-    //bt.Delete(92,bt.GetRoot());
-    cout << bt.is_exist(92,bt.GetRoot()) << endl;
+
+    cout << bt.is_exist(62,bt.GetRoot()) << endl;
 
     
 
