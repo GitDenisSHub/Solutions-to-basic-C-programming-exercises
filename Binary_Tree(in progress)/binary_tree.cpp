@@ -116,15 +116,18 @@ public:
         } 
         else if(currentNode->left == nullptr && currentNode->right == nullptr) return nullptr; 
 
+        Node* foundNode = nullptr;
         if(currentNode->left != nullptr){
-            if(is_exist(data, currentNode->left) == nullptr){
+            foundNode = is_exist(data, currentNode->left);
+            if(foundNode == nullptr){
                 if(currentNode->right != nullptr){
-                    if(is_exist(data, currentNode->right) == nullptr){
+                    foundNode = is_exist(data, currentNode->right);
+                    if(foundNode == nullptr){
                     //cout<<"The element doesn't exist here!"<<endl;
                     return nullptr;
                     }
                     //Вот тут нужно возаращать то, что возвращает наследник правого
-                    return currentNode->right;
+                    return foundNode;
                 }
                 cout<<"The element isn't exist here!"<<endl;
                 return nullptr;
@@ -132,13 +135,14 @@ public:
             }
         }
         else{
-            if(is_exist(data, currentNode->right) == nullptr){
+            foundNode = is_exist(data, currentNode->right);
+            if(foundNode == nullptr){
                 return nullptr;
             }
-            return currentNode->right;
+            return foundNode;
         }
         
-        return currentNode->left;
+        return foundNode;
     }
     //========================================
 
