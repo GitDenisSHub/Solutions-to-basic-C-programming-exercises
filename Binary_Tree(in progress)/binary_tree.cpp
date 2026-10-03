@@ -273,8 +273,8 @@ int main() {
     cout<<endl;
 
 
-    //cout << bt.is_exist(99,bt.GetRoot()) << endl;
-    cout << bt.Delete(99,bt.GetRoot()) << endl;
+    cout << bt.is_exist(73,bt.GetRoot()) << endl;
+    //cout << bt.Delete(73,bt.GetRoot()) << endl;
     
 
     cout<<"==========="<<endl;
