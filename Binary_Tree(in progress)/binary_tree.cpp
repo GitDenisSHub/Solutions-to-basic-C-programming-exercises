@@ -3,24 +3,22 @@
 using namespace std;
 
 /*
- 74. Бинарное дерево
+74. Бинарное дерево
  Реализовать:
      • создание узлов +
-     • добавление дочерних узлов(причем равномерно при помощи очереди) +
+     • добавление дочерних узлов +
      • обход дерева
      • удаление узлов
-     • поиск узла - (является ли он выполненным?)
+     • поиск узла +
  Тренирует: понимание иерархической структуры данных и работы с деревьями.
+
+Сделал корректный поиск узла и возвращение его адреса
+Полностью сконцентрирован на удалении
  
-Код после 8 часа 40 минуты работы над ним
-Доходил до очереди почти 5 часов.....
+Код после 10 часа 27 минуты чистой проги
+Понял что нужно работать с очередью через 5 часов.....
 
-Написал алгоритм поиска элемента в узле!
-
-Ищем способ удалять узлы и сохранять их связи 
-Может быть не нужно удалять излы? Может просто удалить и заместить его значение?
-
- */
+*/
 
 class binary_tree{
 public:
@@ -110,35 +108,41 @@ public:
 
     //========================================
     //Поиск элемента - создан для метода удаления(но можно использовать и так)
-    bool is_exist(int data, Node* currentNode){      
+    Node* is_exist(int data, Node* currentNode){      
         //Алгоритм поиска узла
         if(currentNode->data == data){
             cout<<"We found this element!"<<endl;
-            return true;
+            return currentNode;
         } 
-        else if(currentNode->left == nullptr && currentNode->right == nullptr) return false; 
+        else if(currentNode->left == nullptr && currentNode->right == nullptr) return nullptr; 
 
+        Node* foundNode = nullptr;
         if(currentNode->left != nullptr){
-            if(!(is_exist(data, currentNode->left))){
+            foundNode = is_exist(data, currentNode->left);
+            if(foundNode == nullptr){
                 if(currentNode->right != nullptr){
-                    if(!(is_exist(data, currentNode->right))){
+                    foundNode = is_exist(data, currentNode->right);
+                    if(foundNode == nullptr){
                     //cout<<"The element doesn't exist here!"<<endl;
-                    return false;
+                    return nullptr;
                     }
-                    return true;
+                    //Вот тут нужно возаращать то, что возвращает наследник правого
+                    return foundNode;
                 }
                 cout<<"The element isn't exist here!"<<endl;
-                return false;
+                return nullptr;
                 
             }
         }
         else{
-            if(!(is_exist(data, currentNode->right))){
-                return false;
+            foundNode = is_exist(data, currentNode->right);
+            if(foundNode == nullptr){
+                return nullptr;
             }
+            return foundNode;
         }
         
-        return true;
+        return foundNode;
     }
     //========================================
 
@@ -154,47 +158,21 @@ public:
     //========================================
     //Тут нужно искать не текущий элемент - а предыдущий перед текущим
     bool Delete(int data, Node* currentNode){
-        //Нужно придумать условие - может быть булевая переменная удален (is_delete)
-        //Алгоритм из метода поиска узла (ищет текущий узел)
-        //Но нам нужно переделать под следующий узел!!!!!!!!!!
 
-        if(currentNode->left == nullptr && currentNode->right == nullptr) return false; 
-        else if(currentNode->left->data == data || currentNode->right->data == data){
-            cout<<"We found this element!"<<endl;
-            //1 когда есть левый наследник у следующего(чтобы заменить правые)
-            //2 когда нету левого наследника у следующего(нужно правый сделать левым + правый заместить)
-            if(currentNode->left->data == data){
-                cout<<"Нам интересен левый элемент"<<endl;
-            }
-            else{
-                cout<<"Нам интересен правый элемент"<<endl;
-            }
-                
-                
-                
+        //Делаем проверку только в первом заходе - иначе не делаем(для рекурсии)
+        if(currentNode == root){
+            //Получаем этот элемент и его расположение в виде указателя
+            Node* necessaryNode = is_exist(data, currentNode);
+            //Сначала проверяем, есть ли этот элемент + получаем его значение
+            if(necessaryNode == nullptr){cout<<"Nothing to delete! Element isn't exist!"<<endl; return false;}
+        }
+        //Если элемент все же существует
+        //начиная от necessaryNode мы должны делать замещение значений
+        //И удаление последнего узла(листка без значения)
 
+       
+        
 
-            return true;
-        }
-        if(currentNode->left != nullptr){
-            if(!(Delete(data, currentNode->left))){
-                if(currentNode->right != nullptr){
-                    if(!(Delete(data, currentNode->right))){
-                        //cout<<"The element doesn't exist here!"<<endl;
-                        return false;
-                    }
-                    return true;
-                }
-                cout<<"The element isn't exist here!"<<endl;
-                return false;  
-            }
-        }
-        else{
-            if(!(Delete(data, currentNode->right))){
-                return false;
-            }
-        }
-            
         return true;
        
     }
@@ -294,9 +272,9 @@ int main() {
     }
     cout<<endl;
 
-    //bt.Delete(92,bt.GetRoot());
-    cout << bt.is_exist(92,bt.GetRoot()) << endl;
 
+    //cout << bt.is_exist(99,bt.GetRoot()) << endl;
+    cout << bt.Delete(99,bt.GetRoot()) << endl;
     
 
     cout<<"==========="<<endl;
