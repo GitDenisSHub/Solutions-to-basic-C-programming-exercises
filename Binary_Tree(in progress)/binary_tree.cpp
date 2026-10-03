@@ -3,25 +3,28 @@
 using namespace std;
 
 /*
- 74. Бинарное дерево
+74. Бинарное дерево
  Реализовать:
-     • создание узлов
-     • добавление дочерних узлов
+     • создание узлов +
+     • добавление дочерних узлов +
      • обход дерева
      • удаление узлов
-     • поиск узла
+     • поиск узла +
  Тренирует: понимание иерархической структуры данных и работы с деревьями.
- 
-Код после 6 часа 18 минуты чистой проги
 
- */
+ Пришел к тупику своего метода, ничего не получится, 
+ нужно менять подход, либо действительно очередь либо целочисленные параметры глубины
+ 
+Код после 9 часа 37 минуты чистой проги
+
+*/
 
 class binary_tree{
 public:
     binary_tree()
-    : root(nullptr), count_of_Node(0){cout<<"====Добавляем дерево без корня!==="<<endl;}
+    : root(nullptr), count_of_Node(0){cout<<"====Add tree without a root!==="<<endl;}
     binary_tree(int data)
-    : root(new Node(data)), count_of_Node(1){cout<<"====Добавляем дерево с корнем!==="<<endl;}
+    : root(new Node(data)), count_of_Node(1){cout<<"====Add a tree with a root!==="<<endl;}
     
     class Node{
     public:
@@ -37,59 +40,162 @@ public:
         friend class binary_tree;
     };
     
-    Node* Insert(int data, Node* currentNode){
+    //========================================
+    //Заполнение дерева
+    bool Insert(int data, Node* currentNode){
         if(currentNode == nullptr){
-            cout<<"====Добавляем корень дерева!==="<<endl;
+            cout<<"====Add tree's root!==="<<endl;
             root = new Node(data);
             count_of_Node++;
 
-            cout<<"Количество элементов в очереди: "<<que.GetCountQueue() << endl;
+            cout<<"This element was added: " << root->data << endl;
+            cout<<"Count elements in the tree: "<<que.GetCountQueue() << endl;
             //И выходим, действие выполнено
-            return currentNode;
+            return true;
         }
-
-        //Тут мы сначала должны найти тот самый первый адрес
-        //Если не нашли - вернуться к корню и начать искать в правой стороне
-        //И уже через него добавлять ему листья
-        //Если левый пуст - добавляем в левый
-        //Если занят - добавляем в правый лист
-        //И удаляем этот узел из очереди!
-        else{
+        else if((root->left == nullptr || root->right == nullptr) || currentNode == que.front()){
             //Спрашиваем, есть ли у узла наследники - добавляем туда элементы, если пусто
             if(!(currentNode->left != nullptr && currentNode->right != nullptr)){
                 //Узнаем где именно пусто - добавляем элемент туда
                 if(currentNode->left == nullptr){
-                    cout<<"====Добавляем левый листок!==="<<endl;
+                    cout<<"====Add left leaf of the tree!==="<<endl;
+                    //cout<<"ABS"<<endl;
                     currentNode->left = new Node(data);
-                    //Заносим узел в очередь
+                    //Заносим узел в очередь, над ним мы будем работать в дальнейшем
                     que.push(currentNode->left);
-                    cout<<"Первый узел очереди: "<<que.front()<<endl;
-                    cout<<"Всего узлов в очереди: "<<que.GetCountQueue()<<endl;
-                    return nullptr;
+                    cout<<"This element was added: " << currentNode->left->data << endl;
+                    //cout<<"First node in the queue: "<<que.front()<<endl;
+                    cout<<"This element's address: "<<currentNode->left<<endl;
+                    cout<<"Total nambers of nodes in the tree: "<<que.GetCountQueue()<<endl;
+                    
+                    return true;
                 }
                 else{
-                    cout<<"====Добавляем правый листок!==="<<endl;
+                    cout<<"====Add right leaf of the tree!==="<<endl;
                     currentNode->right = new Node(data);
-                    //Заносим узел в очередь
+                    //Заносим узел в очередь, над ним мы будем работать в дальнейшем
                     que.push(currentNode->right);
-                    cout<<"Первый узел очереди: "<<que.front()<<endl;
-                    cout<<"Всего узлов в очереди: "<<que.GetCountQueue()<<endl;
-                    return nullptr;
+                    cout<<"This element was added: " << currentNode->right->data << endl;
+                    //cout<<"First node in the queue: "<<que.front()<<endl;
+                    cout<<"This element's address: "<<currentNode->right<<endl;
+                    cout<<"Total nambers of nodes in the tree: "<<que.GetCountQueue()<<endl;
+                    
+                    return true;
                 }
                 
             }
-            else{   
-                
-                Insert(data, currentNode->left);
-                Insert(data, currentNode->right);
-                
-             
-            }//Конец else
+            //Если оба листка узла заняты, значит мы выполнили работу над ним - мы его удаляем из очереди
+            if(currentNode->left != nullptr && currentNode->right != nullptr){ que.pop(); cout<<"First node in the queue: "<<que.front()<<endl;}
+            return false;
         }
-    
-        //
-        return 0;  
+        //Условие выхода из цикла
+        else if(currentNode != que.front() && currentNode->left == nullptr && currentNode->right == nullptr){
+            return false;
+        }
+        //Тут нужно сначала идти в правую сторону потом в левую
+        //Тут мы будем искать не первое попавшееся свободное место
+        //А будем искать именно наш индекc
+        if(!(Insert(data, currentNode->left))){
+            if(!(Insert(data, currentNode->right))){
+                return false;
+            }
+        }
+
+        return true;  
     }//Конец нащего ввода
+    //========================================
+
+    //========================================
+    //Поиск элемента - создан для метода удаления(но можно использовать и так)
+    bool is_exist(int data, Node* currentNode){      
+        //Алгоритм поиска узла
+        if(currentNode->data == data){
+            cout<<"We found this element!"<<endl;
+            return true;
+        } 
+        else if(currentNode->left == nullptr && currentNode->right == nullptr) return false; 
+
+        if(currentNode->left != nullptr){
+            if(!(is_exist(data, currentNode->left))){
+                if(currentNode->right != nullptr){
+                    if(!(is_exist(data, currentNode->right))){
+                    //cout<<"The element doesn't exist here!"<<endl;
+                    return false;
+                    }
+                    return true;
+                }
+                cout<<"The element isn't exist here!"<<endl;
+                return false;
+                
+            }
+        }
+        else{
+            if(!(is_exist(data, currentNode->right))){
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    //========================================
+
+
+    //Тут должен быть организован процесс удаления
+    //Может быть не будем удалять узлы а просто перезапишем их значения
+    //А адреса оставим те же самые
+    //И просто удалим самый последний узал
+    //+удалим его из очереди
+    //И добавим в очередь его наследника - причем первым, чтобы быстрее его закрыть
+    //Метод для удаления узлов
+
+    //========================================
+    //Тут нужно искать не текущий элемент - а предыдущий перед текущим
+    bool Delete(int data, Node* currentNode){
+        //Нужно придумать условие - может быть булевая переменная удален (is_delete)
+        //Алгоритм из метода поиска узла (ищет текущий узел)
+        //Но нам нужно переделать под следующий узел!!!!!!!!!!
+
+        if(currentNode->left == nullptr && currentNode->right == nullptr) return false; 
+        else if(currentNode->left->data == data || currentNode->right->data == data){
+            cout<<"We found this element!"<<endl;
+            //1 когда есть левый наследник у следующего(чтобы заменить правые)
+            //2 когда нету левого наследника у следующего(нужно правый сделать левым + правый заместить)
+            if(currentNode->left->data == data){
+                cout<<"Нам интересен левый элемент"<<endl;
+            }
+            else{
+                cout<<"Нам интересен правый элемент"<<endl;
+            }
+                
+                
+                
+
+
+            return true;
+        }
+        if(currentNode->left != nullptr){
+            if(!(Delete(data, currentNode->left))){
+                if(currentNode->right != nullptr){
+                    if(!(Delete(data, currentNode->right))){
+                        //cout<<"The element doesn't exist here!"<<endl;
+                        return false;
+                    }
+                    return true;
+                }
+                cout<<"The element isn't exist here!"<<endl;
+                return false;  
+            }
+        }
+        else{
+            if(!(Delete(data, currentNode->right))){
+                return false;
+            }
+        }
+            
+        return true;
+       
+    }
+    //========================================
     
     //Тут находится дерево, которое будет хранить все адреса листьев  
     //========================================
@@ -117,11 +223,11 @@ public:
         }
 
         void pop(){
-            if(head == nullptr){ cout<<"Очередь пуста!Выводить нечего!"<<endl;}
+            if(head == nullptr){ cout<<"Queue is clear!Nothing to output!"<<endl;}
             else if(counter == 1){
                 head = head->pNext;
                 counter--;
-                cout<<"Это был последний элемент очереди!"<<endl;
+                cout<<"The last element of the queue!"<<endl;
             }
             else{
                 head = head->pNext;
@@ -130,7 +236,7 @@ public:
         }
 
         T front(){
-            if(head == nullptr){cout<<"Очередь пуста!Первый элемент отсутствует!"<<endl; return 0;}
+            if(head == nullptr){cout<<"Queue is clear!First elemnt is absent!"<<endl; return 0;}
             else{
                 return head->data;
             }
@@ -173,45 +279,22 @@ private:
 };
 
 
-
-
-
 int main() {
-    setlocale(LC_ALL, "Rus");
+    //setlocale(LC_ALL, "Rus");
     srand(time_t(NULL));
     
+    cout<<endl;
     binary_tree bt(55);
-    bt.Insert(rand()%100+1, bt.GetRoot());
-    bt.Insert(rand()%100+1, bt.GetRoot());
-    //bt.Insert(rand()%100+1, bt.GetRoot());
+    for (int i = 0; i < 5; i++)
+    {
+       bt.Insert(rand()%100+1, bt.GetRoot());
+    }
     cout<<endl;
 
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // cout<<endl;
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // cout<<endl;
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // cout<<endl;
-    // //Вот это уже не добавляется, так как первый уровень листьев заполнен
-    // //Что делать дальше в этом случае?
-    // //Как понять куда двигаться?
-
-    // //Заполнение ячеек 9 - 12
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
-    // cout<<endl;
-    
-    // //
-    // bt.Insert2(rand()%100+1, bt.GetRoot());
+    //bt.Delete(92,bt.GetRoot());
+    cout << bt.is_exist(92,bt.GetRoot()) << endl;
 
     
-    
-    //Нужно научиться работать вообще без GetRoot
-    //bt.Order(bt.GetRoot());
 
     cout<<"==========="<<endl;
     return 0;
