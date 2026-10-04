@@ -371,7 +371,7 @@ int main() {
     //cout << bt.is_exist(38,bt.GetRoot()) << endl;
     //cout << bt.parentNode(bt.is_exist(38,bt.GetRoot()), bt.GetRoot()) << endl;
    
-    bt.Delete(42,bt.GetRoot());
+    bt.Delete(62,bt.GetRoot());
     bt.Insert(rand()%100+1, bt.GetRoot());
 
 
