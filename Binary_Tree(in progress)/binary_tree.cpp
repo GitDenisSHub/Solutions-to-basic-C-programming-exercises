@@ -12,22 +12,18 @@ using namespace std;
      • поиск узла +
  Тренирует: понимание иерархической структуры данных и работы с деревьями.
 
- - временно расположил вспомогательные указатели в поля класса Дерева(это нужно будет исправить, наверное)
+ - убрал лишние указатели из полей класса Дерева
 
-реализуем удаление/смещение значения требуемого узла - все инструменты у нас присутствуют
-
+//========================================
+ 
 Также, нужно что-то придумать для удаление корня, ведь у него нету роидителя 
 но думаю, что для меня это вообще не проблема, потому что у нас есть "односторонний сдвиг"
 
-
-
-нужно написать вспомогательный второй метод для рекурсии удаления элемента
-
-
-
 Еще обязательно нужно, чтобы удаленный узел стал первым элементом в очереди на добавление элемента!!!!!!!
+//========================================
 
-Код после 12 часов 00 минуты чистой проги
+
+Код после 13 часов 40 минуты чистой проги
 Понял что нужно работать с очередью через 5 часов.....
 */
 
@@ -57,7 +53,7 @@ public:
     bool Insert(int data, Node* currentNode){
         if(currentNode == nullptr){
             cout<<"====Add tree's root!==="<<endl;
-            root = new Node(data);
+            currentNode = new Node(data);
             count_of_Node++;
 
             cout<<"This element was added: " << root->data << endl;
@@ -79,7 +75,7 @@ public:
                     //cout<<"First node in the queue: "<<que.front()<<endl;
                     cout<<"This element's address: "<<currentNode->left<<endl;
                     cout<<"Total nambers of nodes in the tree: "<<que.GetCountQueue()<<endl;
-                    
+                    count_of_Node++;
                     return true;
                 }
                 else{
@@ -91,7 +87,7 @@ public:
                     //cout<<"First node in the queue: "<<que.front()<<endl;
                     cout<<"This element's address: "<<currentNode->right<<endl;
                     cout<<"Total nambers of nodes in the tree: "<<que.GetCountQueue()<<endl;
-                    
+                    count_of_Node++;
                     return true;
                 }
                 
@@ -202,60 +198,23 @@ public:
     }
     //========================================
 
-    //========================================
-    //Вспомогательный методя для удаления
-    bool DeleteNode(Node* childNode, Node* parentNode){
 
-    }
-    //========================================
 
     //Метод для удаления узлов
     //========================================
-    //Попроюуем сделать так, чтобы метод одновременно работал с переменными данных
-    //И принимал указатель на нужный элемент одновременно
-    template <typename T>
-    bool Delete(T data, Node* currentNode){
-        if(currentNode == root){
-            //Получаем этот элемент и его расположение в виде указателя
-            necessaryNode = is_exist(data, currentNode);
-            //Находим родителя данного узла
-            helpNode = parentNode(necessaryNode, currentNode);
-            //Сначала проверяем, есть ли этот элемент + получаем его значение
-            //В данном случае necessaryNode - возвращенное методом значение отсутствия элемента в нашей коллекции
-            if(necessaryNode == nullptr){cout<<"Nothing to delete! Element isn't exist!"<<endl; return false;}
-            //Наверное вот тут где-то нужно начать переход к нашему родителю
-            Delete(necessaryNode, helpNode);
-        }
-        else{
-            //2 варианта, когда есть левый и когда нету левого
-            //1 шаг - делаем рекурсию в одну из сторон
-            //просто копируем значения, удаляем только последний узел
-            //Тут нужно проверять 
-            if(!(currentNode->left == nullptr && currentNode->right == nullptr)){
-                //Тут надо понять у кого мы будем забирать значение
-                //И к нему же будем переходить, чтобы он отнимал значение у следующего своего элемента
-                if(currentNode->left != nullptr){
+    bool Delete(int data, Node* currentNode){
+        //Получаем этот элемент и его расположение в виде указателя
+        Node* necessaryNode = is_exist(data, currentNode);
+        //В данном случае necessaryNode - возвращенное методом значение отсутствия элемента в нашей коллекции
+        if(necessaryNode == nullptr){cout<<"Nothing to delete! Element isn't exist!"<<endl; return false;}
 
-                }
-                else{
+        //Находим одителя данного узла
+        Node* helpNode = parentNode(necessaryNode, currentNode);
+        //Сначала проверяем, есть ли этот элемент + получаем его значение
+        
+        //Наверное вот тут где-то нужно начать переход к нашему родителю
+        DeleteNode(necessaryNode, helpNode);
 
-                }
-            }
-            //Если у узла нету наследников(это значит он является листом!)
-            //Значит мы не мелочимся и напрямую работаем с полями, без промежуточного указателя
-            else{
-                if(helpNode->left == necessaryNode){
-                    helpNode->left = nullptr;
-                    delete necessaryNode;
-                    return true;
-                }
-                else{
-                    helpNode->right = nullptr;
-                    delete necessaryNode;
-                    return true;
-                }
-            }
-        }
         return true;
     }
     //========================================
@@ -336,6 +295,8 @@ public:
         }; 
 
     private:
+        
+
         Node* head;
         int counter;
     };
@@ -348,10 +309,49 @@ private:
     int count_of_Node;
     //Внутри будет очередь указателей на узлы
     Queue<Node*> que;
-    //Пусть эти поля временно будут тут, мне нужно сначала решить задачку
-    //Потом разберемся что с этим делать
-    Node* necessaryNode;
-    Node* helpNode;
+
+    //========================================
+    //Вспомогательный методя для удаления
+    bool DeleteNode(Node* childNode, Node* parentNode){
+        //2 варианта, когда есть левый и когда нету левого
+        //1 шаг - делаем рекурсию в одну из сторон
+        //просто копируем значения, удаляем только последний узел
+        //Тут нужно проверять 
+        if(!(childNode->left == nullptr && childNode->right == nullptr)){
+            //Тут надо понять у кого мы будем забирать значение
+            //И к нему же будем переходить, чтобы он отнимал значение у следующего своего элемента
+            if(childNode->left != nullptr){
+                childNode->data = childNode->left->data;
+                DeleteNode(childNode->left, childNode);
+            }
+            else{
+                childNode->data = childNode->right->data;
+                DeleteNode(childNode->right, childNode);
+            }
+        }
+        //Если у узла нету наследников(это значит он является листом!)
+        //Значит мы не мелочимся и напрямую работаем с полями, без промежуточного указателя
+        else{
+            if(parentNode->left == childNode){
+                parentNode->left = nullptr;
+                //Заносим узел в очередь, чтобы он заполнялся самым первым в очереди(для нормализации)
+                que.push_front(parentNode);
+                delete childNode;
+                count_of_Node--;
+                return true;
+            }
+            else{
+                parentNode->right = nullptr;
+                //Заносим узел в очередь, чтобы он заполнялся самым первым в очереди(для нормализации)
+                que.push_front(parentNode);
+                delete childNode;
+                count_of_Node--;
+                return true;
+            }
+        }
+        return false;
+    }
+    //========================================
 };
 
 
@@ -361,17 +361,19 @@ int main() {
     
     cout<<endl;
     binary_tree bt(55);
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 6; i++)
     {
        bt.Insert(rand()%100+1, bt.GetRoot());
     }
     cout<<endl;
 
 
-    cout << bt.is_exist(38,bt.GetRoot()) << endl;
-    cout << bt.parentNode(bt.is_exist(38,bt.GetRoot()), bt.GetRoot()) << endl;
+    //cout << bt.is_exist(38,bt.GetRoot()) << endl;
+    //cout << bt.parentNode(bt.is_exist(38,bt.GetRoot()), bt.GetRoot()) << endl;
    
-    
+    bt.Delete(42,bt.GetRoot());
+    bt.Insert(rand()%100+1, bt.GetRoot());
+
 
     cout<<"==========="<<endl;
     return 0;
