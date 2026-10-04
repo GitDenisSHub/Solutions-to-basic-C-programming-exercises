@@ -12,12 +12,18 @@ using namespace std;
      • поиск узла +
  Тренирует: понимание иерархической структуры данных и работы с деревьями.
 
-Сделал корректный поиск узла и возвращение его адреса
-Полностью сконцентрирован на удалении
- 
+- добавил метод push_front в очередь(чтобы решать проблему с дырами в сформаированных деревьях)
+- добавил вспомогательный метод для поиска родителя требуемого узла(отдельно, для удаления)
+
+
+реализуем удаление/смещение значения требуемого узла - все инструменты у нас присутствуют
+
+Также, нужно что-то придумать для удаление корня, ведь у него нету роидителя 
+но думаю, что для меня это вообще не проблема, потому что у нас есть "односторонний сдвиг"
+
+
 Код после 10 часа 27 минуты чистой проги
 Понял что нужно работать с очередью через 5 часов.....
-
 */
 
 class binary_tree{
@@ -63,7 +69,7 @@ public:
                     //cout<<"ABS"<<endl;
                     currentNode->left = new Node(data);
                     //Заносим узел в очередь, над ним мы будем работать в дальнейшем
-                    que.push(currentNode->left);
+                    que.push_back(currentNode->left);
                     cout<<"This element was added: " << currentNode->left->data << endl;
                     //cout<<"First node in the queue: "<<que.front()<<endl;
                     cout<<"This element's address: "<<currentNode->left<<endl;
@@ -75,7 +81,7 @@ public:
                     cout<<"====Add right leaf of the tree!==="<<endl;
                     currentNode->right = new Node(data);
                     //Заносим узел в очередь, над ним мы будем работать в дальнейшем
-                    que.push(currentNode->right);
+                    que.push_back(currentNode->right);
                     cout<<"This element was added: " << currentNode->right->data << endl;
                     //cout<<"First node in the queue: "<<que.front()<<endl;
                     cout<<"This element's address: "<<currentNode->right<<endl;
@@ -146,35 +152,81 @@ public:
     }
     //========================================
 
-
-    //Тут должен быть организован процесс удаления
-    //Может быть не будем удалять узлы а просто перезапишем их значения
-    //А адреса оставим те же самые
-    //И просто удалим самый последний узал
-    //+удалим его из очереди
-    //И добавим в очередь его наследника - причем первым, чтобы быстрее его закрыть
-    //Метод для удаления узлов
-
+    //Поиск родителя нужного узла
     //========================================
-    //Тут нужно искать не текущий элемент - а предыдущий перед текущим
-    bool Delete(int data, Node* currentNode){
-
-        //Делаем проверку только в первом заходе - иначе не делаем(для рекурсии)
-        if(currentNode == root){
-            //Получаем этот элемент и его расположение в виде указателя
-            Node* necessaryNode = is_exist(data, currentNode);
-            //Сначала проверяем, есть ли этот элемент + получаем его значение
-            if(necessaryNode == nullptr){cout<<"Nothing to delete! Element isn't exist!"<<endl; return false;}
+    Node* parentNode(Node* necessaryNode, Node* currentNode){
+        //Алгоритм поиска узла
+        if(currentNode->left == necessaryNode){
+            cout<<"We found this element! We're in his left child"<<endl;
+            return currentNode;
         }
-        //Если элемент все же существует
-        //начиная от necessaryNode мы должны делать замещение значений
-        //И удаление последнего узла(листка без значения)
+        else if(currentNode->right == necessaryNode){
+            cout<<"We found this element! We're in his right child"<<endl;
+            return currentNode;
+            
+        }
+        else if(currentNode->left == nullptr && currentNode->right == nullptr) return nullptr; 
 
-       
+        Node* foundNode = nullptr;
+        if(currentNode->left != nullptr){
+            foundNode = parentNode(necessaryNode, currentNode->left);
+            if(foundNode == nullptr){
+                if(currentNode->right != nullptr){
+                    foundNode = parentNode(necessaryNode, currentNode->right);
+                    if(foundNode == nullptr){
+                    //cout<<"The element doesn't exist here!"<<endl;
+                    return nullptr;
+                    }
+                    //Вот тут нужно возаращать то, что возвращает наследник правого
+                    return foundNode;
+                }
+                cout<<"The element isn't exist here!"<<endl;
+                return nullptr;
+                
+            }
+        }
+        else{
+            foundNode = parentNode(necessaryNode, currentNode->right);
+            if(foundNode == nullptr){
+                return nullptr;
+            }
+            return foundNode;
+        }
+        
+        return foundNode;
+    }
+    //========================================
+
+    //Метод для удаления узлов
+    //========================================
+    bool Delete(int data, Node* currentNode){
+        //Получаем этот элемент и его расположение в виде указателя
+        Node* necessaryNode = is_exist(data, root);
+        //Находим родителя данного узла
+        Node* helpNode = parentNode(necessaryNode, root);
+        //Сначала проверяем, есть ли этот элемент + получаем его значение
+        if(necessaryNode == nullptr){cout<<"Nothing to delete! Element isn't exist!"<<endl; return false;}
+
+        
+        if(currentNode != root){
+            //2 варианта, когда есть левый и когда нету левого
+            //1 шаг - делаем рекурсию в одну из сторон
+            //просто копируем значения, удаляем только последний узел
+            if(!(currentNode->left == nullptr && currentNode->right == nullptr)){
+                if(currentNode->left != nullptr){
+
+                }
+                else{
+
+                }
+            }
+             else{
+            
+            }
+            return true;
+        }
         
 
-        return true;
-       
     }
     //========================================
     
@@ -188,7 +240,7 @@ public:
         Queue(T data)
         : head(new Node(data)), counter(1){}
 
-        void push(T data){
+        void push_back(T data){
             if(head == nullptr){
             head = new Node(data);
             counter++;
@@ -200,6 +252,16 @@ public:
             }
             currentNode->pNext = new Node(data);
             counter++;
+            }
+        }
+
+        void push_front(T data){
+            if(head == nullptr){push_back(data);}
+            else{
+                Node* newNode = new Node(data);
+                counter++;
+                newNode->pNext = head;
+                head = newNode;
             }
         }
 
@@ -266,15 +328,16 @@ int main() {
     
     cout<<endl;
     binary_tree bt(55);
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 8; i++)
     {
        bt.Insert(rand()%100+1, bt.GetRoot());
     }
     cout<<endl;
 
 
-    cout << bt.is_exist(73,bt.GetRoot()) << endl;
-    //cout << bt.Delete(73,bt.GetRoot()) << endl;
+    cout << bt.is_exist(38,bt.GetRoot()) << endl;
+    cout << bt.parentNode(bt.is_exist(38,bt.GetRoot()), bt.GetRoot()) << endl;
+   
     
 
     cout<<"==========="<<endl;
