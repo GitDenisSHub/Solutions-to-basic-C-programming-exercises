@@ -13,17 +13,16 @@ using namespace std;
  Тренирует: понимание иерархической структуры данных и работы с деревьями.
 
  - убрал лишние указатели из полей класса Дерева
-
-//========================================
- 
-Также, нужно что-то придумать для удаление корня, ведь у него нету роидителя 
-но думаю, что для меня это вообще не проблема, потому что у нас есть "односторонний сдвиг"
-
-Еще обязательно нужно, чтобы удаленный узел стал первым элементом в очереди на добавление элемента!!!!!!!
-//========================================
+ - корень дерева удаляется корректно(благодаря одностороннему сдвигу)
+ - родитель удаленного узла встает первым в очередь(если его там нету)
+ - добавил метод в очередь для проверки наличия элемента внутри
+ - добавил метод Clear() and is_in_the_queue()
+ - исправил удаление последнего элемента дерева в виде корня
+ - добавил дереву деструктор и метод удаления всего дерева Clear_The_Tree()
 
 
-Код после 13 часов 40 минуты чистой проги
+
+Код после 15 часов 30 минуты чистой проги
 Понял что нужно работать с очередью через 5 часов.....
 */
 
@@ -55,9 +54,9 @@ public:
             cout<<"====Add tree's root!==="<<endl;
             currentNode = new Node(data);
             count_of_Node++;
-
-            cout<<"This element was added: " << root->data << endl;
-            cout<<"Count elements in the tree: "<<que.GetCountQueue() << endl;
+            root = currentNode;
+            cout<<"This element was added: " << currentNode->data << endl;
+            cout<<"Count elements in the tree: "<< count_of_Node << endl;
             //И выходим, действие выполнено
             return true;
         }
@@ -90,6 +89,7 @@ public:
                     count_of_Node++;
                     return true;
                 }
+
                 
             }
             //Если оба листка узла заняты, значит мы выполнили работу над ним - мы его удаляем из очереди
@@ -198,16 +198,25 @@ public:
     }
     //========================================
 
-
-
     //Метод для удаления узлов
     //========================================
     bool Delete(int data, Node* currentNode){
+        if(currentNode == nullptr){
+            cout << "Nothing to delete! Tree is empty!" << endl;
+            return false;
+        }
         //Получаем этот элемент и его расположение в виде указателя
         Node* necessaryNode = is_exist(data, currentNode);
+        if(necessaryNode == root && count_of_Node == 1){
+            delete root;
+            root = nullptr;
+            que.Clear();
+            count_of_Node--;
+            return true;
+        }
+
         //В данном случае necessaryNode - возвращенное методом значение отсутствия элемента в нашей коллекции
         if(necessaryNode == nullptr){cout<<"Nothing to delete! Element isn't exist!"<<endl; return false;}
-
         //Находим одителя данного узла
         Node* helpNode = parentNode(necessaryNode, currentNode);
         //Сначала проверяем, есть ли этот элемент + получаем его значение
@@ -231,14 +240,14 @@ public:
 
         void push_back(T data){
             if(head == nullptr){
-            head = new Node(data);
-            counter++;
+                head = new Node(data);
+                counter++;
             }
         else{
             Node* currentNode = head;
-            while(currentNode->pNext != nullptr){
-                currentNode = currentNode->pNext;
-            }
+                while(currentNode->pNext != nullptr){
+                    currentNode = currentNode->pNext;
+                }
             currentNode->pNext = new Node(data);
             counter++;
             }
@@ -257,14 +266,35 @@ public:
         void pop(){
             if(head == nullptr){ cout<<"Queue is clear!Nothing to output!"<<endl;}
             else if(counter == 1){
-                head = head->pNext;
+                Node* helpNode = head->pNext;
+                delete head;
+                head = helpNode;
                 counter--;
                 cout<<"The last element of the queue!"<<endl;
             }
             else{
-                head = head->pNext;
+                Node* helpNode = head->pNext;
+                delete head;
+                head = helpNode;
                 counter--;
             }
+        }
+
+        bool is_in_the_queue(T necesseryNode){
+            Node* currentNode = head;
+            bool is_find = false;
+
+            while(currentNode != nullptr){
+                if(currentNode->data == necesseryNode){
+                    is_find = true;
+                    break;
+                }
+                currentNode = currentNode->pNext;
+            }
+
+            if(is_find) return true;
+
+            return false;
         }
 
         T front(){
@@ -276,12 +306,14 @@ public:
         //Вывод количества узлов в очереди
         int GetCountQueue(){ return counter;}
 
-        ~Queue(){
+        void Clear(){
             while(counter != 0){
                 pop();
-
             }
         }
+
+        ~Queue(){ Clear();}
+        
 
         class Node{
         public:
@@ -295,8 +327,6 @@ public:
         }; 
 
     private:
-        
-
         Node* head;
         int counter;
     };
@@ -304,6 +334,21 @@ public:
     
     //Нам нужен метод, который будет безопасно возвращать корень дерева
     Node* GetRoot(){ return root;}
+
+    //Тут нужен метод Clear!!!!!!!!!!!!!!!!!!
+    bool Clear(){
+        while(count_of_Node != 0){
+            if(count_of_Node == 1){ Delete(root->data, root); return true;}
+            else{
+                if(root->left != nullptr){Delete(root->left->data, root);}
+                if(root->right != nullptr){Delete(root->right->data, root);}
+            }
+        }
+        return true;
+    }
+
+    //Стандартный деструктор
+    ~binary_tree(){ Clear();}
 private:
     Node* root;
     int count_of_Node;
@@ -335,7 +380,7 @@ private:
             if(parentNode->left == childNode){
                 parentNode->left = nullptr;
                 //Заносим узел в очередь, чтобы он заполнялся самым первым в очереди(для нормализации)
-                que.push_front(parentNode);
+                if(!(que.is_in_the_queue(parentNode))){que.push_front(parentNode); }
                 delete childNode;
                 count_of_Node--;
                 return true;
@@ -343,7 +388,7 @@ private:
             else{
                 parentNode->right = nullptr;
                 //Заносим узел в очередь, чтобы он заполнялся самым первым в очереди(для нормализации)
-                que.push_front(parentNode);
+                if(!(que.is_in_the_queue(parentNode))){que.push_front(parentNode); }
                 delete childNode;
                 count_of_Node--;
                 return true;
@@ -367,11 +412,8 @@ int main() {
     }
     cout<<endl;
 
-
-    //cout << bt.is_exist(38,bt.GetRoot()) << endl;
-    //cout << bt.parentNode(bt.is_exist(38,bt.GetRoot()), bt.GetRoot()) << endl;
    
-    bt.Delete(62,bt.GetRoot());
+    bt.Delete(55,bt.GetRoot());
     bt.Insert(rand()%100+1, bt.GetRoot());
 
 
