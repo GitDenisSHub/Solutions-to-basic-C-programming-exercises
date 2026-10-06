@@ -8,21 +8,28 @@ using namespace std;
      • создание узлов +
      • добавление дочерних узлов +
      • обход дерева
-     • удаление узлов
+     • удаление узлов +
      • поиск узла +
  Тренирует: понимание иерархической структуры данных и работы с деревьями.
+//========================================
+- наладил корректное добавление элементов в дерево
+- написал обход дерева preorder
+- написал обход дерева inorder
+- написал обход дерева postorder
+- написал обход дерева levelorder
 
- - убрал лишние указатели из полей класса Дерева
- - корень дерева удаляется корректно(благодаря одностороннему сдвигу)
- - родитель удаленного узла встает первым в очередь(если его там нету)
- - добавил метод в очередь для проверки наличия элемента внутри
- - добавил метод Clear() and is_in_the_queue()
- - исправил удаление последнего элемента дерева в виде корня
- - добавил дереву деструктор и метод удаления всего дерева Clear_The_Tree()
+//========================================
 
+Нам нужно переделать метож Clear() - потому что он очень много ресурсов тратит
+нужно, чтобы удаление происходило внутри него!!!!!!
+Без использования нашего метода поиска и удаления - нужно это оптимизировать жестко
+(возможно сделать то же самое, что происходит во время обхода дерева!)
 
+insert работает очень запутано, нужно будет это поправить
 
-Код после 15 часов 30 минуты чистой проги
+levelorder работает не совсем корректно
+
+Код после 17 часов 16 минуты чистой проги
 Понял что нужно работать с очередью через 5 часов.....
 */
 
@@ -73,8 +80,8 @@ public:
                     cout<<"This element was added: " << currentNode->left->data << endl;
                     //cout<<"First node in the queue: "<<que.front()<<endl;
                     cout<<"This element's address: "<<currentNode->left<<endl;
-                    cout<<"Total nambers of nodes in the tree: "<<que.GetCountQueue()<<endl;
                     count_of_Node++;
+                    cout<<"Total nambers of nodes in the tree: "<<count_of_Node<<endl;
                     return true;
                 }
                 else{
@@ -85,8 +92,11 @@ public:
                     cout<<"This element was added: " << currentNode->right->data << endl;
                     //cout<<"First node in the queue: "<<que.front()<<endl;
                     cout<<"This element's address: "<<currentNode->right<<endl;
-                    cout<<"Total nambers of nodes in the tree: "<<que.GetCountQueue()<<endl;
                     count_of_Node++;
+                    cout<<"Total nambers of nodes in the tree: "<<count_of_Node<<endl;
+                    //После добавления второго элемента нужно удалить узел из очереди добавления
+                    //В случае, если это не корень, конечно же
+                    if(currentNode != root){ que.pop();}
                     return true;
                 }
 
@@ -228,6 +238,71 @@ public:
     }
     //========================================
     
+    //1. Preorder: прямой обход
+    //корень → левое поддерево → правое поддерево
+    //1 → 2 → 4 → 5 → 3
+    void preorder(Node* currentNode){
+        cout<<currentNode->data<<" ";
+        if(currentNode->left != nullptr) preorder(currentNode->left);
+        if(currentNode->right != nullptr) preorder(currentNode->right);
+    }
+
+    //2. Inorder: симметричный обход
+    //левое поддерево → корень → правое поддерево
+    //4 → 2 → 5 → 1 → 3
+    void inorder(Node* currentNode){
+        if(currentNode->left != nullptr) inorder(currentNode->left);
+        cout<<currentNode->data<<" ";
+        if(currentNode->right != nullptr) inorder(currentNode->right);
+    }
+
+    
+    //3. Postorder: обратный обход
+    //левое поддерево → правое поддерево → корень
+    //4 → 5 → 2 → 3 → 1   
+    void postorder(Node* currentNode){
+        if(currentNode->left != nullptr) postorder(currentNode->left);
+        if(currentNode->right != nullptr) postorder(currentNode->right);
+        cout<<currentNode->data<<" ";
+    }
+
+    //4. Обход по уровням
+    //1 → 2 → 3 → 4 → 5
+    bool levelorder(Node* currentNode){
+        if(currentNode == root && root == nullptr){
+            cout<<"Tree if empty! Nothing to print!";
+            return false;
+        }
+
+        //Сначала выводим первый уровень, дерево
+        if(currentNode == root) cout<<currentNode->data<<" ";
+           
+        //Потом выводим его наследников (если они есть)
+        if(!(currentNode->left == nullptr && currentNode->right == nullptr)){
+            if(currentNode->left != nullptr) cout<<currentNode->left->data<<" ";
+            if(currentNode->right != nullptr) cout<<currentNode->right->data<<" ";
+        }
+        else return false;
+        
+        //Переход по ветвям
+        //Осталось добавить проверку на существование направлений
+        if(currentNode->left != nullptr){
+            if(!(levelorder(currentNode->left))) {
+                if(currentNode->right != nullptr)
+                    if(!(levelorder(currentNode->right))) {
+                        return false;
+                }   
+            }
+        }
+        else{
+            if(!(levelorder(currentNode->right))) {
+                        return false;
+                }   
+        }
+        
+        return false;
+    } 
+
     //Тут находится дерево, которое будет хранить все адреса листьев  
     //========================================
     template <class T>
@@ -335,20 +410,49 @@ public:
     //Нам нужен метод, который будет безопасно возвращать корень дерева
     Node* GetRoot(){ return root;}
 
-    //Тут нужен метод Clear!!!!!!!!!!!!!!!!!!
-    bool Clear(){
-        while(count_of_Node != 0){
-            if(count_of_Node == 1){ Delete(root->data, root); return true;}
-            else{
-                if(root->left != nullptr){Delete(root->left->data, root);}
-                if(root->right != nullptr){Delete(root->right->data, root);}
+    //Нужно найти иной подход в удалении элементов
+    bool Clear(Node* currentNode){
+
+        if(currentNode == nullptr) return true;
+        if(currentNode->left == nullptr && currentNode->right == nullptr && currentNode == root){
+            delete root;
+            root = nullptr;
+            return true;
+        }   
+        else if(currentNode->left == nullptr && currentNode->right == nullptr) return false;
+        
+        //Переход по ветвям
+        //Осталось добавить проверку на существование направлений
+        if(currentNode->left != nullptr){
+            if(!(Clear(currentNode->left))) {
+                delete currentNode->left;
+                currentNode->left = nullptr;
+                if(currentNode->right != nullptr)
+                    if(!(Clear(currentNode->right))) {
+                        delete currentNode->right;
+                        currentNode->right = nullptr;
+                        if(currentNode == root){
+                            delete root;
+                            root = nullptr;
+                            count_of_Node = 0;
+                            return true;
+                        }
+                        return false;
+                }   
             }
         }
-        return true;
+        else{
+            if(!(Clear(currentNode->right))) {
+                        delete currentNode->right;
+                        currentNode->right = nullptr;
+                        return false;
+                }   
+        }
+        return false;
     }
 
     //Стандартный деструктор
-    ~binary_tree(){ Clear();}
+    ~binary_tree(){ Clear(root);}
 private:
     Node* root;
     int count_of_Node;
@@ -406,15 +510,27 @@ int main() {
     
     cout<<endl;
     binary_tree bt(55);
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 7; i++)
     {
        bt.Insert(rand()%100+1, bt.GetRoot());
     }
     cout<<endl;
+    
 
-   
-    bt.Delete(55,bt.GetRoot());
-    bt.Insert(rand()%100+1, bt.GetRoot());
+    bt.preorder(bt.GetRoot());
+    cout<<endl;
+    bt.inorder(bt.GetRoot());
+    cout<<endl;
+    bt.postorder(bt.GetRoot());
+    cout<<endl;
+    bt.levelorder(bt.GetRoot());
+    cout<<endl;
+
+
+    cout<<"==========="<<endl;
+    bt.Clear(bt.GetRoot());
+    bt.levelorder(bt.GetRoot());
+    cout<<endl;
 
 
     cout<<"==========="<<endl;
